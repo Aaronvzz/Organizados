@@ -11,15 +11,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskIncidentScreen(
     availableAreas: List<String> = listOf("Logistica", "Sistemas", "Ventas", "Todos los empleados"), // TODO: Obtener de repositorio
-    availableWorkers: List<String> = listOf("Trabajador 1", "Trabajador 2", "Trabajador 3"), // TODO: Obtener de repositorio
+    availableWorkers: List<String> = listOf("Juan Pérez", "María García", "Carlos Rodríguez", "Ana López", "Pedro Martínez", "Laura Sánchez"), // TODO: Obtener de repositorio
     onNavigateToTasks: () -> Unit,
     onNavigateToIncidents: () -> Unit
 ) {
@@ -48,11 +51,12 @@ fun AddTaskIncidentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.SpaceBetween
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Selector de tipo: Tarea o Incidencia
@@ -164,48 +168,98 @@ fun AddTaskIncidentScreen(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Dropdown según el tipo seleccionado
-                var expanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = selectedRecipient,
-                        onValueChange = {},
-                        readOnly = true,
-                        placeholder = { 
-                            Text(
-                                if (recipientType == "area") "Seleccione un área" else "Seleccione un trabajador"
-                            ) 
-                        },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.menuAnchor(),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedIndicatorColor = Color(0xFF3EC8AC),
-                            unfocusedIndicatorColor = Color.Gray,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedPlaceholderColor = Color.Gray,
-                            unfocusedPlaceholderColor = Color.Gray
-                        )
-                    )
-                    ExposedDropdownMenu(
+                // Campo según el tipo seleccionado
+                if (recipientType == "area") {
+                    // Dropdown para Áreas
+                    var expanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        val options = if (recipientType == "area") availableAreas else availableWorkers
-                        options.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    selectedRecipient = option
-                                    expanded = false
-                                }
+                        OutlinedTextField(
+                            value = selectedRecipient,
+                            onValueChange = {},
+                            readOnly = true,
+                            placeholder = { Text("Seleccione un área") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.menuAnchor(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedIndicatorColor = Color(0xFF3EC8AC),
+                                unfocusedIndicatorColor = Color.Gray,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray
                             )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            availableAreas.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        selectedRecipient = option
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Autocomplete con filtrado para Trabajadores
+                    var expanded by remember { mutableStateOf(false) }
+                    var filteredWorkers by remember { mutableStateOf(availableWorkers) }
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = {},
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = selectedRecipient,
+                            onValueChange = { query ->
+                                selectedRecipient = query
+                                filteredWorkers = availableWorkers.filter { 
+                                    it.contains(query, ignoreCase = true) 
+                                }
+                                expanded = query.isNotBlank() && filteredWorkers.isNotEmpty()
+                            },
+                            placeholder = { Text("Busque un trabajador") },
+                            trailingIcon = {
+                                IconButton(onClick = { expanded = !expanded }) {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                }
+                            },
+                            modifier = Modifier.menuAnchor(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedIndicatorColor = Color(0xFF3EC8AC),
+                                unfocusedIndicatorColor = Color.Gray,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            filteredWorkers.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        selectedRecipient = option
+                                        expanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -267,7 +321,7 @@ fun AddTaskIncidentScreen(
                     value = startDate ?: "",
                     onValueChange = {},
                     readOnly = true,
-                    placeholder = { Text("Ingrese la fecha de inicio (dd/MM/yyyy)") },
+                    placeholder = { Text("dd/MM/yyyy HH:mm") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showStartDatePicker = true },
@@ -290,46 +344,140 @@ fun AddTaskIncidentScreen(
                 
                 // DatePicker simplificado para fecha de inicio
                 if (showStartDatePicker) {
+                    val calendar = remember { Calendar.getInstance() }
+                    var day by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH).toString()) }
+                    var month by remember { mutableStateOf((calendar.get(Calendar.MONTH) + 1).toString()) }
+                    var year by remember { mutableStateOf(calendar.get(Calendar.YEAR).toString()) }
+                    var hour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY).toString()) }
+                    var minute by remember { mutableStateOf(calendar.get(Calendar.MINUTE).toString()) }
+                    
+                    val isValidDate = remember(day, month, year, hour, minute) {
+                        try {
+                            val selectedDay = day.toIntOrNull()
+                            val selectedMonth = month.toIntOrNull()
+                            val selectedYear = year.toIntOrNull()
+                            val selectedHour = hour.toIntOrNull()
+                            val selectedMinute = minute.toIntOrNull()
+                            
+                            if (selectedDay == null || selectedMonth == null || selectedYear == null ||
+                                selectedHour == null || selectedMinute == null) {
+                                false
+                            } else {
+                                val selectedCal = Calendar.getInstance().apply {
+                                    set(selectedYear, selectedMonth - 1, selectedDay, selectedHour, selectedMinute)
+                                }
+                                selectedCal >= calendar
+                            }
+                        } catch (e: Exception) {
+                            false
+                        }
+                    }
+                    
                     AlertDialog(
                         onDismissRequest = { showStartDatePicker = false },
-                        title = { Text("Seleccionar fecha de inicio") },
+                        title = { Text("Seleccionar fecha y hora de inicio") },
                         text = {
                             Column {
-                                var day by remember { mutableStateOf("") }
-                                var month by remember { mutableStateOf("") }
-                                var year by remember { mutableStateOf("") }
                                 
                                 OutlinedTextField(
                                     value = day,
-                                    onValueChange = { day = it },
-                                    label = { Text("Día") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) day = it.take(2) },
+                                    label = { Text("Día (DD)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedTextField(
                                     value = month,
-                                    onValueChange = { month = it },
-                                    label = { Text("Mes") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) month = it.take(2) },
+                                    label = { Text("Mes (MM)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedTextField(
                                     value = year,
-                                    onValueChange = { year = it },
-                                    label = { Text("Año") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) year = it.take(4) },
+                                    label = { Text("Año (YYYY)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = hour,
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) hour = it.take(2) },
+                                    label = { Text("Hora (HH)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = minute,
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) minute = it.take(2) },
+                                    label = { Text("Minutos (MM)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
                                 )
                                 
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
+                                if (!isValidDate && day.isNotBlank() && month.isNotBlank() && year.isNotBlank() && hour.isNotBlank() && minute.isNotBlank()) {
+                                    Text(
+                                        text = "La fecha no puede ser anterior a hoy",
+                                        color = Color.Red,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                
                                 Button(
                                     onClick = {
-                                        if (day.isNotBlank() && month.isNotBlank() && year.isNotBlank()) {
-                                            startDate = "$day/$month/$year"
+                                        if (isValidDate) {
+                                            startDate = "$day/$month/$year $hour:$minute"
                                             showStartDatePicker = false
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = isValidDate && day.isNotBlank() && month.isNotBlank() && year.isNotBlank() && hour.isNotBlank() && minute.isNotBlank()
                                 ) {
                                     Text("Confirmar")
                                 }
@@ -349,7 +497,7 @@ fun AddTaskIncidentScreen(
                     value = dueDate ?: "",
                     onValueChange = {},
                     readOnly = true,
-                    placeholder = { Text("Ingrese la fecha límite (dd/MM/yyyy)") },
+                    placeholder = { Text("dd/MM/yyyy HH:mm") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showDueDatePicker = true },
@@ -372,46 +520,140 @@ fun AddTaskIncidentScreen(
                 
                 // DatePicker simplificado para fecha límite
                 if (showDueDatePicker) {
+                    val calendar = remember { Calendar.getInstance() }
+                    var day by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH).toString()) }
+                    var month by remember { mutableStateOf((calendar.get(Calendar.MONTH) + 1).toString()) }
+                    var year by remember { mutableStateOf(calendar.get(Calendar.YEAR).toString()) }
+                    var hour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY).toString()) }
+                    var minute by remember { mutableStateOf(calendar.get(Calendar.MINUTE).toString()) }
+                    
+                    val isValidDate = remember(day, month, year, hour, minute) {
+                        try {
+                            val selectedDay = day.toIntOrNull()
+                            val selectedMonth = month.toIntOrNull()
+                            val selectedYear = year.toIntOrNull()
+                            val selectedHour = hour.toIntOrNull()
+                            val selectedMinute = minute.toIntOrNull()
+                            
+                            if (selectedDay == null || selectedMonth == null || selectedYear == null ||
+                                selectedHour == null || selectedMinute == null) {
+                                false
+                            } else {
+                                val selectedCal = Calendar.getInstance().apply {
+                                    set(selectedYear, selectedMonth - 1, selectedDay, selectedHour, selectedMinute)
+                                }
+                                selectedCal >= calendar
+                            }
+                        } catch (e: Exception) {
+                            false
+                        }
+                    }
+                    
                     AlertDialog(
                         onDismissRequest = { showDueDatePicker = false },
-                        title = { Text("Seleccionar fecha límite") },
+                        title = { Text("Seleccionar fecha y hora límite") },
                         text = {
                             Column {
-                                var day by remember { mutableStateOf("") }
-                                var month by remember { mutableStateOf("") }
-                                var year by remember { mutableStateOf("") }
                                 
                                 OutlinedTextField(
                                     value = day,
-                                    onValueChange = { day = it },
-                                    label = { Text("Día") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) day = it.take(2) },
+                                    label = { Text("Día (DD)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedTextField(
                                     value = month,
-                                    onValueChange = { month = it },
-                                    label = { Text("Mes") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) month = it.take(2) },
+                                    label = { Text("Mes (MM)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedTextField(
                                     value = year,
-                                    onValueChange = { year = it },
-                                    label = { Text("Año") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) year = it.take(4) },
+                                    label = { Text("Año (YYYY)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = hour,
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) hour = it.take(2) },
+                                    label = { Text("Hora (HH)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = minute,
+                                    onValueChange = { if (it.all { char -> char.isDigit() }) minute = it.take(2) },
+                                    label = { Text("Minutos (MM)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF3EC8AC),
+                                        unfocusedIndicatorColor = Color.Gray,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black
+                                    )
                                 )
                                 
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
+                                if (!isValidDate && day.isNotBlank() && month.isNotBlank() && year.isNotBlank() && hour.isNotBlank() && minute.isNotBlank()) {
+                                    Text(
+                                        text = "La fecha no puede ser anterior a hoy",
+                                        color = Color.Red,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                
                                 Button(
                                     onClick = {
-                                        if (day.isNotBlank() && month.isNotBlank() && year.isNotBlank()) {
-                                            dueDate = "$day/$month/$year"
+                                        if (isValidDate) {
+                                            dueDate = "$day/$month/$year $hour:$minute"
                                             showDueDatePicker = false
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = isValidDate && day.isNotBlank() && month.isNotBlank() && year.isNotBlank() && hour.isNotBlank() && minute.isNotBlank()
                                 ) {
                                     Text("Confirmar")
                                 }
@@ -426,7 +668,7 @@ fun AddTaskIncidentScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 16.dp),
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Botón Borrar
@@ -450,16 +692,48 @@ fun AddTaskIncidentScreen(
                     Text("Borrar")
                 }
 
-                // Botón Enviar
-                Button(
-                    onClick = {
-                        // TODO: Guardar la tarea/incidencia
-                        if (selectedType == "Tarea") {
-                            onNavigateToTasks()
-                        } else {
-                            onNavigateToIncidents()
-                        }
-                    },
+                                  // Botón Enviar
+                  Button(
+                      onClick = {
+                          // Crear la tarea o incidencia y guardarla en el repositorio
+                          val id = UUID.randomUUID().toString()
+                          val dateKey = startDate?.split(" ")?.get(0) ?: "" // Extraer solo la fecha (dd/MM/yyyy)
+                          val sender = "Usuario Actual" // TODO: Obtener del usuario actual autenticado
+                          
+                          if (selectedType == "Tarea") {
+                              val task = Task(
+                                  id = id,
+                                  title = title,
+                                  description = description,
+                                  sender = sender,
+                                  recipientType = recipientType,
+                                  recipient = selectedRecipient,
+                                  priority = priority,
+                                  startDate = startDate ?: "",
+                                  dueDate = dueDate ?: "",
+                                  status = "pendiente",
+                                  dateKey = dateKey
+                              )
+                              TaskIncidentRepository.addTask(task)
+                              onNavigateToTasks()
+                          } else {
+                              val incident = Incident(
+                                  id = id,
+                                  title = title,
+                                  description = description,
+                                  sender = sender,
+                                  recipientType = recipientType,
+                                  recipient = selectedRecipient,
+                                  priority = priority,
+                                  startDate = startDate ?: "",
+                                  dueDate = dueDate ?: "",
+                                  status = "pendiente",
+                                  dateKey = dateKey
+                              )
+                              TaskIncidentRepository.addIncident(incident)
+                              onNavigateToIncidents()
+                          }
+                      },
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),

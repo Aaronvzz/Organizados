@@ -16,25 +16,8 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IncidentsScreen() {
-    // TODO: Obtener incidencias del repositorio o ViewModel
-    // Datos de ejemplo para mostrar la funcionalidad
-    val sampleIncidents = remember {
-        listOf(
-            Incident(
-                id = "1",
-                title = "Problema con servidor",
-                description = "El servidor principal está presentando fallas intermitentes.",
-                sender = "Admin 1",
-                recipientType = "area",
-                recipient = "Sistemas",
-                priority = "Urgente",
-                startDate = "10/09/2024 10:00",
-                dueDate = "10/09/2024 18:00",
-                status = "pendiente",
-                dateKey = "today"
-            )
-        )
-    }
+    // Obtener incidencias del repositorio
+    val sampleIncidents = TaskIncidentRepository.incidents
 
     var expandedIncidentId by remember { mutableStateOf<String?>(null) }
     var showProblemReportDialog by remember { mutableStateOf<String?>(null) }
@@ -309,19 +292,3 @@ fun IncidentCard(
         }
     }
 }
-
-
-// Modelo de datos para Incidencia actualizado
-data class Incident(
-    val id: String,
-    val title: String,
-    val description: String,
-    val sender: String,
-    val recipientType: String, // "area" o "worker"
-    val recipient: String, // Nombre del área o trabajador
-    val priority: String,
-    val startDate: String,
-    val dueDate: String,
-    val status: String, // "pendiente" o "completada"
-    val dateKey: String // Clave para agrupar por fecha
-)

@@ -61,9 +61,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         composable(Screen.Area.route) {
             AreaScreen(
                 onNavigateToWorker = {
-                    navController.navigate(Screen.WorkerMain.route) {
-                        popUpTo(Screen.Area.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.JoinWorkGroup.route)
                 },
                 onNavigateToAdmin = {
                     navController.navigate(Screen.Admin.route)
@@ -98,7 +96,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         
         composable(Screen.JoinWorkGroup.route) {
             JoinWorkGroupScreen(
-                onNavigateToSettings = {
+                onNavigateToWorkerMain = {
                     navController.navigate(Screen.WorkerMain.route) {
                         popUpTo(Screen.JoinWorkGroup.route) { inclusive = true }
                     }

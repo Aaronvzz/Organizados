@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JoinWorkGroupScreen(onNavigateToSettings: () -> Unit) {
+fun JoinWorkGroupScreen(onNavigateToWorkerMain: () -> Unit) {
     var groupCode by remember { mutableStateOf("") }
 
     Scaffold(
@@ -65,7 +65,7 @@ fun JoinWorkGroupScreen(onNavigateToSettings: () -> Unit) {
                     if (groupCode.isNotBlank()) {
                         // Aquí iría la lógica de unirse
                         // Después de unirse exitosamente, navegamos a la pantalla principal del trabajador
-                        onNavigateToSettings()
+                        onNavigateToWorkerMain()
                     }
                 },
                 modifier = Modifier

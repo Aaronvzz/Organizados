@@ -16,51 +16,8 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen() {
-    // TODO: Obtener tareas del repositorio o ViewModel
-    // Datos de ejemplo para mostrar la funcionalidad
-    val sampleTasks = remember {
-        listOf(
-            Task(
-                id = "1",
-                title = "Reunion Semanal",
-                description = "Reunión semanal del equipo de logística para revisar el progreso del mes.",
-                sender = "Admin 1",
-                recipientType = "area",
-                recipient = "Logistica",
-                priority = "Alta",
-                startDate = "12/09/2024 08:00",
-                dueDate = "12/09/2024 10:00",
-                status = "pendiente",
-                dateKey = "today"
-            ),
-            Task(
-                id = "2",
-                title = "Reporte de Ventas",
-                description = "Se necesita generar el reporte de ventas del último mes.",
-                sender = "Admin 1",
-                recipientType = "worker",
-                recipient = "Trabajador 1",
-                priority = "Urgente",
-                startDate = "08/09/2024 08:00",
-                dueDate = "12/09/2024 18:00",
-                status = "pendiente",
-                dateKey = "12 sept"
-            ),
-            Task(
-                id = "3",
-                title = "Simulacro de Incendio",
-                description = "Realizar simulacro de incendio para todos los empleados del edificio.",
-                sender = "Admin 1",
-                recipientType = "area",
-                recipient = "Todos los empleados",
-                priority = "Baja",
-                startDate = "15/09/2024 14:00",
-                dueDate = "15/09/2024 16:00",
-                status = "completada",
-                dateKey = "15 sept"
-            )
-        )
-    }
+    // Obtener tareas del repositorio
+    val sampleTasks = TaskIncidentRepository.tasks
 
     var expandedTaskId by remember { mutableStateOf<String?>(null) }
     var showProblemReportDialog by remember { mutableStateOf<String?>(null) }
@@ -335,19 +292,3 @@ fun TaskCard(
         }
     }
 }
-
-
-// Modelo de datos para Tarea actualizado
-data class Task(
-    val id: String,
-    val title: String,
-    val description: String,
-    val sender: String,
-    val recipientType: String, // "area" o "worker"
-    val recipient: String, // Nombre del área o trabajador
-    val priority: String,
-    val startDate: String,
-    val dueDate: String,
-    val status: String, // "pendiente" o "completada"
-    val dateKey: String // Clave para agrupar por fecha
-)
